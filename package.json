@@ -14,7 +14,10 @@
     "start:backend": "npm run start --prefix apps/backend",
     "start:seller": "npm run start --prefix apps/seller",
     "build:frontend": "npm run build --prefix apps/frontend",
-    "typecheck": "npm run typecheck --prefix apps/backend && npm run typecheck --prefix apps/frontend && npm run typecheck --prefix apps/seller"
+    "typecheck": "npm run typecheck --prefix apps/backend && npm run typecheck --prefix apps/frontend && npm run typecheck --prefix apps/seller",
+    "build:program": "anchor build --ignore-keys",
+    "deploy:program": "anchor program deploy --provider.cluster devnet",
+    "keys:program": "anchor keys list"
   },
   "engines": {
     "node": ">=20"
