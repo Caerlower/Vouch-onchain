@@ -1,12 +1,15 @@
-import { motion } from "motion/react";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import type { GiftCard } from "../lib/api";
 import { shortAddr } from "../lib/api";
+import AnimatedUsd from "./AnimatedUsd";
 
 type Props = {
   card: GiftCard | null;
   highlight?: boolean;
   compact?: boolean;
   label?: string;
+  draining?: boolean;
 };
 
 export default function GiftCardVisual({
@@ -14,85 +17,113 @@ export default function GiftCardVisual({
   highlight,
   compact,
   label,
+  draining,
 }: Props) {
+  const reduce = useReducedMotion();
+  const [drainFlash, setDrainFlash] = useState(false);
+
+  useEffect(() => {
+    if (!draining) return;
+    setDrainFlash(true);
+    const t = window.setTimeout(() => setDrainFlash(false), 1400);
+    return () => window.clearTimeout(t);
+  }, [draining]);
+
+  const shellClass = `gift-card-shell ${compact ? "gift-card-shell--compact" : ""}`;
+
   if (!card) {
     return (
-      <div
-        className={`flex aspect-[1.6/1] w-full max-w-md items-center justify-center rounded-2xl border border-dashed border-line bg-surface/60 ${
-          compact ? "max-w-xs" : ""
-        }`}
-      >
-        <p className="font-mono text-xs text-muted">No gift card yet</p>
+      <div className={shellClass}>
+        <div className="foil-card foil-card--empty flex items-center justify-center">
+          <p className="text-[13px] text-muted">Card appears here</p>
+        </div>
       </div>
     );
   }
 
   const drained = card.remainingUsdc <= 0 || card.status === "redeemed";
+  const fillPct = Math.max(
+    0,
+    Math.min(100, (card.remainingUsdc / Math.max(card.faceValueUsdc, 1e-9)) * 100),
+  );
+  const endpoint = card.endpointUrl.replace(/^https?:\/\//, "");
 
   return (
-    <motion.div
-      layout
-      initial={{ rotateY: -12, opacity: 0, y: 16 }}
-      animate={{
-        rotateY: 0,
-        opacity: 1,
-        y: 0,
-        scale: highlight ? 1.02 : 1,
-      }}
-      transition={{ type: "spring", stiffness: 260, damping: 22 }}
-      className={`foil-card aspect-[1.6/1] w-full max-w-md rounded-2xl p-5 text-surface shadow-[0_20px_50px_-20px_rgba(15,23,42,0.55)] ${
-        compact ? "max-w-xs p-4" : ""
-      } ${drained ? "grayscale-[0.35] opacity-80" : ""}`}
-      style={{ transformStyle: "preserve-3d" }}
-    >
-      <div className="flex h-full flex-col justify-between">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-lime/90">
-              {label || "Endpoint gift card"}
-            </p>
-            <p className="mt-1 font-display text-lg font-bold tracking-tight md:text-xl">
-              Vouch
-            </p>
+    <div className={shellClass}>
+      <motion.div
+        layout
+        initial={false}
+        animate={{
+          y: highlight ? -2 : 0,
+          scale: drainFlash ? [1, 1.015, 1] : 1,
+        }}
+        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        className={`foil-card ${drained ? "foil-card--drained" : ""} ${
+          drainFlash ? "foil-card--drain" : ""
+        }`}
+      >
+        <div className="foil-card__inner">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="foil-card__label truncate">{label || "Gift card"}</p>
+              <p className="foil-card__brand">Vouch</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="foil-card__badge">{card.visibility}</span>
+              <div className="foil-card__chip" aria-hidden />
+            </div>
           </div>
-          <span className="rounded-full bg-white/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-lime">
-            {card.visibility}
-          </span>
-        </div>
 
-        <div>
-          <p className="font-mono text-[10px] text-white/55">Bound endpoint</p>
-          <p className="mt-0.5 truncate font-mono text-xs text-white/90">
-            {card.endpointUrl.replace(/^https?:\/\//, "")}
-          </p>
-        </div>
+          {/* Balance */}
+          <div className="foil-card__balance">
+            <p className="foil-card__label">Balance</p>
+            <p className="foil-card__amount">
+              <AnimatedUsd
+                value={card.remainingUsdc}
+                digits={4}
+                flash={!drained || drainFlash}
+              />
+            </p>
+            <div className="foil-card__bar">
+              <motion.div
+                className="foil-card__bar-fill"
+                initial={false}
+                animate={{ width: `${fillPct}%` }}
+                transition={
+                  reduce
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 160, damping: 22 }
+                }
+              />
+            </div>
+            <p className="foil-card__meta">
+              Face ${card.faceValueUsdc.toFixed(4)}
+              <span className="foil-card__dot">·</span>
+              Tip ${card.commissionUsdc.toFixed(4)}
+            </p>
+          </div>
 
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="font-mono text-[10px] text-white/55">Remaining</p>
-            <p className="font-display text-3xl font-bold tracking-tight text-lime md:text-4xl">
-              ${card.remainingUsdc.toFixed(4)}
-            </p>
-            <p className="mt-0.5 font-mono text-[10px] text-white/50">
-              face ${card.faceValueUsdc.toFixed(4)} · tip $
-              {card.commissionUsdc.toFixed(4)}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="font-mono text-sm font-medium tracking-wider text-white">
-              {card.code}
-            </p>
-            <p className="mt-1 font-mono text-[10px] text-white/50">
-              {card.owner
-                ? `holder ${shortAddr(card.owner)}`
-                : `from ${shortAddr(card.issuer)}`}
-            </p>
-            <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-lime/80">
-              {card.status}
-            </p>
+          {/* Footer — stacked so code never overlaps tip */}
+          <div className="foil-card__footer">
+            <div className="min-w-0">
+              <p className="foil-card__label">Endpoint</p>
+              <p className="foil-card__endpoint truncate" title={endpoint}>
+                {endpoint}
+              </p>
+            </div>
+            <div className="foil-card__code-block">
+              <p className="foil-card__code">{card.code}</p>
+              <p className="foil-card__holder">
+                {card.owner
+                  ? `Held by ${shortAddr(card.owner)}`
+                  : `From ${shortAddr(card.issuer)}`}
+              </p>
+              <p className="foil-card__status">{card.status}</p>
+            </div>
           </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
