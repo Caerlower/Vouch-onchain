@@ -55,7 +55,17 @@ export type LiveEvent = {
 };
 
 export const api = {
-  health: () => req("/health"),
+  health: () =>
+    req<{
+      demoMode?: boolean;
+      cluster?: string;
+      solana?: {
+        onchain?: boolean;
+        operator?: string | null;
+        lastError?: string | null;
+      };
+      magicblock?: { enabled?: boolean };
+    }>("/health"),
   sellers: () => req<{ sellers: Array<Record<string, unknown>> }>("/sellers"),
   probeSeller: (resourceUrl: string) =>
     req("/sellers/probe", {
@@ -66,10 +76,23 @@ export const api = {
     req("/sellers", { method: "POST", body: JSON.stringify(body) }),
   pool: (sellerId: string) => req(`/pool/${sellerId}`),
   fundPool: (sellerId: string, amountUsdc: number, from?: string) =>
-    req(`/pool/${sellerId}/fund`, {
+    req<{
+      ok?: boolean;
+      pool?: Record<string, unknown>;
+      chain?: {
+        ok?: boolean;
+        signature?: string | null;
+        explorerUrl?: string | null;
+      };
+      explorerUrl?: string | null;
+    }>(`/pool/${sellerId}/fund`, {
       method: "POST",
       body: JSON.stringify({ amountUsdc, from }),
     }),
+  demoAgents: () =>
+    req<{ a: string; b: string; roleA?: string; roleB?: string }>(
+      "/demo/agents",
+    ),
   quote: (sellerId: string, gift?: string | null) => {
     const q = new URLSearchParams({ sellerId });
     if (gift) q.set("gift", gift);
@@ -125,6 +148,8 @@ export function shortAddr(s: string | null | undefined, n = 4): string {
   return `${s.slice(0, n)}…${s.slice(-n)}`;
 }
 
-/** Deterministic demo agent pubkeys (base58-shaped, not real keys). */
-export const DEMO_AGENT_A = "AgntA111111111111111111111111111111111111111";
-export const DEMO_AGENT_B = "AgntB222222222222222222222222222222222222222";
+/** Fallback only — prefer /demo/agents from the backend (real Devnet keypairs). */
+export const DEMO_AGENT_A_FALLBACK =
+  "AgntA111111111111111111111111111111111111111";
+export const DEMO_AGENT_B_FALLBACK =
+  "AgntB222222222222222222222222222222222222222";
