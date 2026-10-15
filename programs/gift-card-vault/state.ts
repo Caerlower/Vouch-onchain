@@ -1,39 +1,48 @@
 /**
- * Type-level sketch of on-chain gift-card vault accounts.
- * Deploy with Anchor when ready; backend pool/gift-cards mirror this today.
+ * Type-level mirror of on-chain gift-card vault accounts.
+ * Source of truth: Rust program + IDL (`apps/backend/idl/gift_card_vault.json`).
+ * Devnet program: 8NbhcpsM2VojigW8GRy1ZcY3XhKEpdV9Rte24PmWHbFT
  */
 
 export type VaultAccount = {
-  sellerId: string;
+  sellerIdHash: Uint8Array; // 32
+  sellerId: Uint8Array; // 32 padded
+  sellerIdLen: number;
   owner: string;
   operator: string;
   mint: string;
   balanceAtomic: bigint;
+  reservedAtomic: bigint;
+  fundedAtomic: bigint;
+  remittedAtomic: bigint;
   cardsMinted: number;
   cardsRedeemed: number;
   bump: number;
+  tokenBump: number;
 };
 
 export type GiftCardAccount = {
   codeHash: Uint8Array;
-  sellerId: string;
+  sellerIdHash: Uint8Array;
   endpointHash: Uint8Array;
   issuer: string;
-  owner: string | null;
+  owner: string;
+  hasOwner: boolean;
   faceValueAtomic: bigint;
   remainingAtomic: bigint;
   commissionAtomic: bigint;
   status: "minted" | "claimed" | "redeemed" | "exhausted";
-  settleSig: string | null;
+  settleSigHash: Uint8Array;
+  hasSettleSig: boolean;
   bump: number;
 };
 
 export type RemitReceipt = {
-  settleSig: string;
+  settleSigHash: Uint8Array;
   buyer: string;
   issuer: string;
   rebateAtomic: bigint;
   commissionAtomic: bigint;
-  magicblockClientRef: string;
+  card: string;
   bump: number;
 };
