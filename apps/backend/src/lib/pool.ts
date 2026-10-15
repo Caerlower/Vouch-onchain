@@ -1,6 +1,7 @@
 /**
- * Seller-prepaid gift-card pool (escrow analogue).
- * Demo keeps balances in-memory; production wires to the on-chain vault program.
+ * Seller-prepaid gift-card pool (in-memory index).
+ * When VAULT_ENABLED, fund/mint/redeem also hit the on-chain Anchor vault
+ * (`lib/vault.ts`) — this Map stays as a fast demo mirror.
  */
 import type { GiftCardPool } from "./types.js";
 import { roundUsdc } from "./chain.js";

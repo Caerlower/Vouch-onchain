@@ -5,6 +5,7 @@ import { assertSafeOutboundUrl } from "./url-safety.js";
 import { fetchSellerPaymentRequired, parsePaymentRequired } from "./pass-through.js";
 import { atomicToUsdc, roundUsdc } from "./chain.js";
 import { getConfig } from "./pricing.js";
+import { fundVaultOnchain, isVaultEnabled, vaultPda } from "./vault.js";
 
 export async function seedDemoSellerFromEnv(): Promise<void> {
   const url = process.env.DEMO_SELLER_URL?.trim();
@@ -35,11 +36,40 @@ export async function seedDemoSellerFromEnv(): Promise<void> {
       giftCardRebatePercent: getConfig().rebatePercent,
       giftCardCommissionPercent: getConfig().commissionPercent,
     });
-    seedDemoPool(seller.id, 5);
+
+    const seedAmount = 5;
+    seedDemoPool(seller.id, seedAmount);
+
+    if (isVaultEnabled()) {
+      const vault = await fundVaultOnchain({
+        sellerId: seller.id,
+        amountUsdc: seedAmount,
+      });
+      if (vault.ok) {
+        publish(
+          "pool.funded",
+          `On-chain vault seeded · $${seedAmount} · ${vaultPda(seller.id).toBase58().slice(0, 8)}…`,
+          {
+            sellerId: seller.id,
+            amountUsdc: seedAmount,
+            vault: vault.signature,
+            explorerUrl: vault.explorerUrl,
+            vaultAddress: vaultPda(seller.id).toBase58(),
+          },
+        );
+        console.log(
+          `[seed] vault funded ${seller.id} tx=${vault.signature || vault.note}`,
+        );
+      } else {
+        console.warn(`[seed] vault fund skipped/failed: ${vault.note}`);
+      }
+    }
+
     publish("seller.registered", `Demo seller seeded · ${seller.resourceUrl}`, {
       sellerId: seller.id,
       payTo,
       price,
+      vaultAddress: isVaultEnabled() ? vaultPda(seller.id).toBase58() : null,
     });
     console.log(`[seed] demo seller ${seller.id} @ ${url}`);
   } catch (err) {

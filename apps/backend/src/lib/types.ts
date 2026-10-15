@@ -91,6 +91,7 @@ export type LiveEventType =
   | "remit.queued"
   | "remit.magicblock"
   | "giftcard.balance_updated"
+  | "chain.attested"
   | "demo.step"
   | "error";
 
