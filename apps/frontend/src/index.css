@@ -1,0 +1,161 @@
+@import "tailwindcss";
+@import "@fontsource-variable/syne";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+:root {
+  --ink: #141210;
+  --ink-soft: #3d3832;
+  --muted: #7a7268;
+  --paper: #f3efe6;
+  --paper-2: #ebe4d6;
+  --surface: #fffdf8;
+  --line: #ddd4c4;
+  --teal: #0d9488;
+  --teal-deep: #0f766e;
+  --lime: #c8f542;
+  --coral: #e85d4c;
+  --foil-a: #0d9488;
+  --foil-b: #f59e0b;
+  --foil-c: #38bdf8;
+  --ok: #15803d;
+  --danger: #dc2626;
+}
+
+@theme {
+  --font-display: "Syne Variable", Syne, ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Syne Variable", Syne, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-teal: var(--teal);
+  --color-teal-deep: var(--teal-deep);
+  --color-lime: var(--lime);
+  --color-coral: var(--coral);
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+
+  --ease-out-expo: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--teal) 30%, white);
+  color: var(--ink);
+}
+
+.mesh-hero {
+  background:
+    radial-gradient(
+      ellipse 55% 45% at 85% 10%,
+      color-mix(in srgb, var(--lime) 35%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 45% 40% at 5% 90%,
+      color-mix(in srgb, var(--teal) 18%, transparent),
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 30% 25% at 50% 40%,
+      color-mix(in srgb, var(--foil-b) 12%, transparent),
+      transparent 60%
+    ),
+    var(--paper);
+}
+
+.grain {
+  position: relative;
+}
+.grain::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Holographic gift card surface */
+.foil-card {
+  background:
+    linear-gradient(
+      135deg,
+      #0f172a 0%,
+      #134e4a 28%,
+      #0f766e 48%,
+      #1e3a5f 68%,
+      #0f172a 100%
+    );
+  position: relative;
+  overflow: hidden;
+}
+.foil-card::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(
+    from 120deg,
+    transparent 0deg,
+    color-mix(in srgb, var(--lime) 45%, transparent) 40deg,
+    color-mix(in srgb, var(--foil-c) 50%, transparent) 80deg,
+    color-mix(in srgb, var(--foil-b) 40%, transparent) 120deg,
+    transparent 180deg,
+    color-mix(in srgb, var(--teal) 35%, transparent) 220deg,
+    transparent 360deg
+  );
+  animation: foil-spin 14s linear infinite;
+  opacity: 0.55;
+}
+.foil-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.12) 45%,
+    transparent 60%
+  );
+  mix-blend-mode: overlay;
+}
+.foil-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes foil-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .foil-card::before {
+    animation: none;
+  }
+}
+
+.event-rail {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}

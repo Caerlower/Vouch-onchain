@@ -1,0 +1,30 @@
+{
+  "name": "@vouch-mb/seller",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Native Solana x402 seller endpoint for Vouch MagicBlock demos",
+  "scripts": {
+    "dev": "tsx watch --env-file=.env index.ts",
+    "start": "tsx index.ts",
+    "start:local": "tsx --env-file=.env index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@x402/core": "^2.28.0",
+    "@x402/express": "^2.28.0",
+    "@x402/svm": "^2.28.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.15.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
+  }
+}

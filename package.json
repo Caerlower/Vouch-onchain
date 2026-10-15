@@ -1,0 +1,23 @@
+{
+  "name": "vouch-magicblock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vouch — endpoint gift cards for x402 agents on Solana + MagicBlock",
+  "scripts": {
+    "install:all": "npm run install:backend && npm run install:seller && npm run install:frontend",
+    "install:backend": "npm install --prefix apps/backend",
+    "install:seller": "npm install --prefix apps/seller",
+    "install:frontend": "npm install --prefix apps/frontend",
+    "dev:backend": "npm run dev --prefix apps/backend",
+    "dev:frontend": "npm run dev --prefix apps/frontend",
+    "dev:seller": "npm run dev --prefix apps/seller",
+    "start:backend": "npm run start --prefix apps/backend",
+    "start:seller": "npm run start --prefix apps/seller",
+    "build:frontend": "npm run build --prefix apps/frontend",
+    "typecheck": "npm run typecheck --prefix apps/backend && npm run typecheck --prefix apps/frontend && npm run typecheck --prefix apps/seller"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
