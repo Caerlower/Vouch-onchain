@@ -52,6 +52,22 @@ import {
   getRemit,
 } from "./lib/payments.js";
 import { magicblockStatus, remitGiftCardSplit } from "./lib/magicblock.js";
+import {
+  attestOnChain,
+  ensureSolanaReady,
+  getOperatorPubkey,
+  solanaStatus,
+} from "./lib/solana-tx.js";
+import {
+  vaultStatus,
+  fundVaultOnchain,
+  mintCardOnchain,
+  claimCardOnchain,
+  redeemCardOnchain,
+  isVaultEnabled,
+  vaultPda,
+} from "./lib/vault.js";
+import { demoAgentsStatus } from "./lib/demo-agents.js";
 import { attachSse, publish, recentEvents } from "./lib/events.js";
 import { assertSafeOutboundUrl } from "./lib/url-safety.js";
 import { seedDemoSellerFromEnv } from "./lib/seed-demo.js";
@@ -65,7 +81,6 @@ import {
   fetchSellerPaymentRequired,
   parsePaymentRequired,
 } from "./lib/pass-through.js";
-
 const PORT = Number(process.env.PORT || 4100);
 const PUBLIC_SITE_URL = (
   process.env.PUBLIC_SITE_URL || "http://localhost:5174"
@@ -77,9 +92,12 @@ const NETWORK = process.env.NETWORK || SOLANA_DEVNET_CAIP;
 const CLUSTER = process.env.SOLANA_CLUSTER || "devnet";
 const FACILITATOR_URL =
   process.env.FACILITATOR_URL || "https://x402.org/facilitator";
-const OPERATOR =
+const OPERATOR_FALLBACK =
   process.env.VOUCH_OPERATOR_PUBKEY ||
   "VouchOper1111111111111111111111111111111111";
+function operatorPubkey() {
+  return getOperatorPubkey() || OPERATOR_FALLBACK;
+}
 
 const app = express();
 app.set("trust proxy", 1);
@@ -112,7 +130,12 @@ app.use(express.json({ limit: "1mb" }));
 // ---------------------------------------------------------------------------
 // Health / events / quote / ledger
 // ---------------------------------------------------------------------------
-app.get("/health", (_req, res) => {
+app.get("/health", async (_req, res) => {
+  try {
+    await ensureSolanaReady();
+  } catch {
+    /* lastError already set — surface via solanaStatus */
+  }
   res.json({
     ok: true,
     service: "vouch-magicblock-backend",
@@ -125,8 +148,20 @@ app.get("/health", (_req, res) => {
     paymentMode: "pass-through",
     giftCards: true,
     magicblock: magicblockStatus(),
-    note: "Endpoint gift cards for Solana x402 — remits via MagicBlock private split.",
+    vault: vaultStatus(),
+    solana: solanaStatus(),
+    agents: demoAgentsStatus(),
+    note: "Settles + vault custody on Solana Devnet. Gift-card remits via MagicBlock private PER.",
+    warnings: DEMO_MODE
+      ? [
+          "DEMO_MODE=true — synthetic payments accepted; do not expose this host publicly",
+        ]
+      : [],
   });
+});
+
+app.get("/demo/agents", (_req, res) => {
+  res.json(demoAgentsStatus());
 });
 
 app.get("/events", (req, res) => {
@@ -252,10 +287,21 @@ app.post("/sellers", async (req, res) => {
     });
 
     const seedAmount = Number(req.body?.seedPoolUsdc);
+    let funded = 0;
     if (Number.isFinite(seedAmount) && seedAmount > 0) {
+      funded = seedAmount;
       fundPool(seller.id, seedAmount, "register");
     } else if (DEMO_MODE) {
+      funded = 5;
       seedDemoPool(seller.id, 5);
+    }
+
+    let vault = null;
+    if (funded > 0 && isVaultEnabled()) {
+      vault = await fundVaultOnchain({
+        sellerId: seller.id,
+        amountUsdc: funded,
+      });
     }
 
     publish("seller.registered", `Registered ${seller.name} · gift cards enabled`, {
@@ -263,9 +309,15 @@ app.post("/sellers", async (req, res) => {
       resourceUrl: seller.resourceUrl,
       payTo: seller.payoutAddress,
       basePriceUsdc: seller.basePriceUsdc,
+      vaultAddress: isVaultEnabled() ? vaultPda(seller.id).toBase58() : null,
     });
 
-    res.json({ seller, pool: getPool(seller.id) });
+    res.json({
+      seller,
+      pool: getPool(seller.id),
+      vault,
+      vaultAddress: isVaultEnabled() ? vaultPda(seller.id).toBase58() : null,
+    });
   } catch (err) {
     res.status(400).json({
       error: err instanceof Error ? err.message : "register_failed",
@@ -280,12 +332,37 @@ app.get("/pool/:sellerId", (req, res) => {
   res.json(getPool(req.params.sellerId));
 });
 
-app.post("/pool/:sellerId/fund", (req, res) => {
+app.post("/pool/:sellerId/fund", async (req, res) => {
   try {
     const amount = Number(req.body?.amountUsdc);
     const from = String(req.body?.from || "");
-    const pool = fundPool(req.params.sellerId, amount, from || undefined);
-    res.json({ ok: true, pool });
+    const sellerId = req.params.sellerId;
+
+    let vault = null;
+    if (isVaultEnabled()) {
+      vault = await fundVaultOnchain({ sellerId, amountUsdc: amount });
+      if (!vault.ok) {
+        return res.status(502).json({
+          error: "vault_fund_failed",
+          note: vault.note,
+          vault,
+        });
+      }
+    }
+
+    const pool = fundPool(sellerId, amount, from || undefined);
+    const chain = await attestOnChain({
+      kind: "pool.fund",
+      memo: `vouch:fund|seller=${sellerId}|amount=${amount}|from=${from || "anon"}|vault=${vault?.signature || "-"}`,
+    });
+    res.json({
+      ok: true,
+      pool,
+      vault,
+      vaultAddress: vaultPda(sellerId).toBase58(),
+      chain,
+      explorerUrl: vault?.explorerUrl || chain.explorerUrl,
+    });
   } catch (err) {
     res.status(400).json({
       error: err instanceof Error ? err.message : "fund_failed",
@@ -312,7 +389,7 @@ app.get("/gift-cards/:code", (req, res) => {
   res.json({ card });
 });
 
-app.post("/gift-cards/mint", (req, res) => {
+app.post("/gift-cards/mint", async (req, res) => {
   try {
     const sellerId = String(req.body?.sellerId || "").trim();
     const issuer = String(req.body?.issuer || "").trim();
@@ -333,10 +410,47 @@ app.post("/gift-cards/mint", (req, res) => {
       issuer,
       visibility: req.body?.visibility === "public" ? "public" : "private",
     });
+
+    let vault = null;
+    if (isVaultEnabled()) {
+      vault = await mintCardOnchain({
+        sellerId: seller.id,
+        code: card.code,
+        endpointUrl: card.endpointUrl,
+        issuer,
+        faceValueUsdc: card.faceValueUsdc,
+        commissionUsdc: card.commissionUsdc,
+      });
+      if (!vault.ok) {
+        return res.status(502).json({
+          error: "vault_mint_failed",
+          note: vault.note,
+          card,
+          vault,
+        });
+      }
+    }
+
     recordGiftMint(issuer);
 
+    const chain = await attestOnChain({
+      kind: "giftcard.mint",
+      memo: `vouch:mint|code=${card.code}|issuer=${issuer}|face=${card.faceValueUsdc}|vault=${vault?.signature || "-"}`,
+    });
+
     const shareUrl = `${PUBLIC_SITE_URL}/claim/${card.code}`;
-    res.json({ card, shareUrl, claimPath: `/claim/${card.code}` });
+    res.json({
+      card: {
+        ...card,
+        cardPda: vault?.cardPda || null,
+        vaultTx: vault?.signature || null,
+      },
+      shareUrl,
+      claimPath: `/claim/${card.code}`,
+      vault,
+      chain,
+      explorerUrl: vault?.explorerUrl || chain.explorerUrl,
+    });
   } catch (err) {
     res.status(400).json({
       error: err instanceof Error ? err.message : "mint_failed",
@@ -344,15 +458,33 @@ app.post("/gift-cards/mint", (req, res) => {
   }
 });
 
-app.post("/gift-cards/claim", (req, res) => {
+app.post("/gift-cards/claim", async (req, res) => {
   try {
     const code = String(req.body?.code || "").trim();
     const owner = String(req.body?.owner || "").trim();
     if (!code || !owner) {
       return res.status(400).json({ error: "code_and_owner_required" });
     }
+
+    let vault = null;
+    const existing = getGiftCardByCode(code);
+    if (isVaultEnabled() && existing) {
+      vault = await claimCardOnchain({
+        sellerId: existing.sellerId,
+        code,
+        owner,
+      });
+      if (!vault.ok) {
+        return res.status(502).json({
+          error: "vault_claim_failed",
+          note: vault.note,
+          vault,
+        });
+      }
+    }
+
     const card = claimGiftCard(code, owner);
-    res.json({ card });
+    res.json({ card, vault, explorerUrl: vault?.explorerUrl || null });
   } catch (err) {
     res.status(400).json({
       error: err instanceof Error ? err.message : "claim_failed",
@@ -511,22 +643,55 @@ async function finishSettlement(args: {
   body: unknown;
   paymentResponseHeader: string | null;
 }) {
-  const { res, seller, quote, payer, settleTxId, body } = args;
+  const { res, seller, quote, payer, body } = args;
+  let settleTxId = args.settleTxId;
 
   if (payer) recordPayment(payer);
 
-  publish("payment.settled", `Settled · ${shortAddr(payer) || "agent"} paid $${quote.price.toFixed(2)}`, {
-    sellerId: seller.id,
-    settleTxId,
-    payer,
-    priceUsdc: quote.price,
-    giftCardEligible: quote.giftCardEligible,
+  // Land a real Solana Devnet signature for this settle (memo attestation).
+  const chain = await attestOnChain({
+    kind: "settle",
+    memo: `vouch:settle|seller=${seller.id}|payer=${payer}|price=${quote.price}|gift=${quote.giftCard?.code || "-"}`,
   });
+  if (chain.ok && chain.signature) {
+    settleTxId = chain.signature;
+  }
+
+  publish(
+    "payment.settled",
+    `Settled · ${shortAddr(payer) || "agent"} paid $${quote.price.toFixed(2)}${
+      chain.ok && chain.signature
+        ? ` · tx ${shortAddr(chain.signature, 6)}`
+        : " · (local only)"
+    }`,
+    {
+      sellerId: seller.id,
+      settleTxId,
+      payer,
+      priceUsdc: quote.price,
+      giftCardEligible: quote.giftCardEligible,
+      chain,
+      explorerUrl: chain.explorerUrl,
+    },
+  );
 
   let remit: Record<string, unknown> | null = null;
 
   if (quote.giftCardEligible && quote.giftCard && payer) {
     try {
+      let vaultRedeem = null;
+      if (isVaultEnabled()) {
+        vaultRedeem = await redeemCardOnchain({
+          sellerId: seller.id,
+          code: quote.giftCard.code,
+          buyer: payer,
+          settleTxId,
+        });
+        if (!vaultRedeem.ok) {
+          throw new Error(`vault_redeem_failed: ${vaultRedeem.note}`);
+        }
+      }
+
       const redeemed = redeemGiftCard({
         card: quote.giftCard,
         buyer: payer,
@@ -534,7 +699,7 @@ async function finishSettlement(args: {
       });
 
       const mb = await remitGiftCardSplit({
-        from: OPERATOR,
+        from: operatorPubkey(),
         buyer: payer,
         issuer: redeemed.issuer,
         rebateUsdc: redeemed.rebateUsdc,
@@ -562,6 +727,7 @@ async function finishSettlement(args: {
         commissionUsdc: redeemed.commissionUsdc,
         buyer: payer,
         issuer: redeemed.issuer,
+        vault: vaultRedeem,
         magicblock: mb,
         pool: getPool(seller.id),
       };
@@ -587,6 +753,8 @@ async function finishSettlement(args: {
       quote,
       remit,
       pool: getPool(seller.id),
+      chain,
+      explorerUrl: chain.explorerUrl,
     },
   });
 }
@@ -638,5 +806,14 @@ app.listen(PORT, "0.0.0.0", async () => {
   console.log(`[vouch-mb] network ${NETWORK} · cluster ${CLUSTER}`);
   console.log(`[vouch-mb] magicblock`, magicblockStatus());
   console.log(`[vouch-mb] demoMode=${DEMO_MODE}`);
+  try {
+    await ensureSolanaReady();
+    console.log(`[vouch-mb] solana`, solanaStatus());
+  } catch (err) {
+    console.warn(
+      `[vouch-mb] solana not ready:`,
+      err instanceof Error ? err.message : err,
+    );
+  }
   await seedDemoSellerFromEnv();
 });
