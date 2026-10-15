@@ -1,47 +1,93 @@
 @import "tailwindcss";
-@import "@fontsource-variable/syne";
-@import "@fontsource/ibm-plex-mono/400.css";
-@import "@fontsource/ibm-plex-mono/500.css";
 
-:root {
-  --ink: #141210;
-  --ink-soft: #3d3832;
-  --muted: #7a7268;
-  --paper: #f3efe6;
-  --paper-2: #ebe4d6;
-  --surface: #fffdf8;
-  --line: #ddd4c4;
-  --teal: #0d9488;
-  --teal-deep: #0f766e;
-  --lime: #c8f542;
-  --coral: #e85d4c;
-  --foil-a: #0d9488;
-  --foil-b: #f59e0b;
-  --foil-c: #38bdf8;
-  --ok: #15803d;
-  --danger: #dc2626;
+/*
+  iOS-inspired system palette
+  Light: grouped gray · Dark: pure black + elevated sheets
+  Accent: systemBlue · Success: systemGreen
+*/
+
+:root,
+[data-theme="light"] {
+  --bg: #f2f2f7;
+  --bg-elevated: #ffffff;
+  --ink: #000000;
+  --ink-2: rgba(60, 60, 67, 0.72);
+  --muted: rgba(60, 60, 67, 0.48);
+  --line: rgba(60, 60, 67, 0.14);
+  --line-strong: rgba(60, 60, 67, 0.29);
+  --accent: #007aff;
+  --accent-2: #34c759;
+  --accent-soft: rgba(0, 122, 255, 0.1);
+  --accent-2-soft: rgba(52, 199, 89, 0.12);
+  --ok: #34c759;
+  --danger: #ff3b30;
+  --card-from: #1c1c1e;
+  --card-mid: #2c2c2e;
+  --card-to: #3a3a3c;
+  --card-text: #ffffff;
+  --card-muted: rgba(235, 235, 245, 0.55);
+  --card-glow: rgba(0, 0, 0, 0.28);
+  --fill: rgba(120, 120, 128, 0.12);
+  --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+[data-theme="dark"] {
+  --bg: #000000;
+  --bg-elevated: #1c1c1e;
+  --ink: #ffffff;
+  --ink-2: rgba(235, 235, 245, 0.7);
+  --muted: rgba(235, 235, 245, 0.45);
+  --line: rgba(84, 84, 88, 0.45);
+  --line-strong: rgba(84, 84, 88, 0.65);
+  --accent: #0a84ff;
+  --accent-2: #30d158;
+  --accent-soft: rgba(10, 132, 255, 0.18);
+  --accent-2-soft: rgba(48, 209, 88, 0.16);
+  --ok: #30d158;
+  --danger: #ff453a;
+  --card-from: #2c2c2e;
+  --card-mid: #3a3a3c;
+  --card-to: #48484a;
+  --card-text: #ffffff;
+  --card-muted: rgba(235, 235, 245, 0.5);
+  --card-glow: rgba(0, 0, 0, 0.55);
+  --fill: rgba(120, 120, 128, 0.24);
 }
 
 @theme {
-  --font-display: "Syne Variable", Syne, ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Syne Variable", Syne, ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, "IBM Plex Mono", Menlo, monospace;
 
+  --color-bg: var(--bg);
+  --color-elevated: var(--bg-elevated);
   --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
+  --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
-  --color-paper: var(--paper);
-  --color-paper-2: var(--paper-2);
-  --color-surface: var(--surface);
   --color-line: var(--line);
-  --color-teal: var(--teal);
-  --color-teal-deep: var(--teal-deep);
-  --color-lime: var(--lime);
-  --color-coral: var(--coral);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-2-soft: var(--accent-2-soft);
   --color-ok: var(--ok);
   --color-danger: var(--danger);
+  --color-chalk: var(--ink);
+  --color-chalk-soft: var(--ink-2);
+  --color-teal: var(--accent);
+  --color-teal-deep: var(--accent);
+  --color-lime: var(--accent-2);
+  --color-coral: var(--danger);
+  --color-void: var(--bg);
+  --color-panel: var(--bg-elevated);
+  --color-panel-2: var(--bg);
+  --color-surface: var(--bg-elevated);
+  --color-paper: var(--bg);
+  --color-paper-2: var(--bg-elevated);
+  --color-ink-soft: var(--ink-2);
+  --color-fill: var(--fill);
 
-  --ease-out-expo: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-expo: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 html,
@@ -53,109 +99,332 @@ body,
 
 body {
   font-family: var(--font-sans);
-  background: var(--paper);
+  background: var(--bg);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--teal) 30%, white);
-  color: var(--ink);
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
-.mesh-hero {
-  background:
-    radial-gradient(
-      ellipse 55% 45% at 85% 10%,
-      color-mix(in srgb, var(--lime) 35%, transparent),
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse 45% 40% at 5% 90%,
-      color-mix(in srgb, var(--teal) 18%, transparent),
-      transparent 50%
-    ),
-    radial-gradient(
-      ellipse 30% 25% at 50% 40%,
-      color-mix(in srgb, var(--foil-b) 12%, transparent),
-      transparent 60%
-    ),
-    var(--paper);
+.stage {
+  background: var(--bg);
 }
 
-.grain {
-  position: relative;
-}
 .grain::after {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  display: none;
 }
 
-/* Holographic gift card surface */
+.panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: 1.125rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .panel {
+  box-shadow: none;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+  padding: 0.75rem 1.25rem;
+  transition: opacity 0.15s var(--ease), transform 0.1s ease-out;
+}
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.88;
+}
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.btn-primary:disabled {
+  opacity: 0.35;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  border: none;
+  background: var(--fill);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  padding: 0.75rem 1.25rem;
+  transition: opacity 0.15s ease, transform 0.1s ease-out;
+}
+.btn-ghost:hover {
+  opacity: 0.85;
+}
+.btn-ghost:active {
+  transform: scale(0.97);
+}
+
+/* Apple Card–style gift card */
+.gift-card-shell {
+  width: 100%;
+  max-width: 22rem;
+  margin-inline: auto;
+}
+.gift-card-shell--compact {
+  max-width: 19rem;
+}
+
 .foil-card {
+  position: relative;
+  width: 100%;
+  /* Auto height — fixed aspect-ratio crushed content in compact demo */
+  min-height: 11.5rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-sizing: border-box;
   background:
     linear-gradient(
-      135deg,
-      #0f172a 0%,
-      #134e4a 28%,
-      #0f766e 48%,
-      #1e3a5f 68%,
-      #0f172a 100%
+      160deg,
+      var(--card-from) 0%,
+      var(--card-mid) 55%,
+      var(--card-to) 100%
     );
-  position: relative;
-  overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 20px 40px -16px var(--card-glow);
+  color: var(--card-text);
 }
-.foil-card::before {
-  content: "";
-  position: absolute;
-  inset: -40%;
-  background: conic-gradient(
-    from 120deg,
-    transparent 0deg,
-    color-mix(in srgb, var(--lime) 45%, transparent) 40deg,
-    color-mix(in srgb, var(--foil-c) 50%, transparent) 80deg,
-    color-mix(in srgb, var(--foil-b) 40%, transparent) 120deg,
-    transparent 180deg,
-    color-mix(in srgb, var(--teal) 35%, transparent) 220deg,
-    transparent 360deg
-  );
-  animation: foil-spin 14s linear infinite;
-  opacity: 0.55;
-}
+
 .foil-card::after {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    115deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.12) 45%,
-    transparent 60%
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 42%,
+    transparent 100%
   );
-  mix-blend-mode: overlay;
+  pointer-events: none;
 }
-.foil-card > * {
+
+.foil-card::before {
+  display: none;
+}
+
+.foil-card__inner {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem 0.95rem;
+  box-sizing: border-box;
 }
 
-@keyframes foil-spin {
-  to {
-    transform: rotate(360deg);
+.foil-card__label {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--card-muted);
+}
+
+.foil-card__brand {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.foil-card__badge {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 0.15rem 0.5rem;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: capitalize;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.foil-card__chip {
+  height: 1.15rem;
+  width: 1.65rem;
+  border-radius: 4px;
+  background: linear-gradient(145deg, #e8e8ed 0%, #aeaeb2 50%, #8e8e93 100%);
+}
+
+.foil-card__balance {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.foil-card__amount {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.foil-card__bar {
+  margin-top: 0.45rem;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.foil-card__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.foil-card__meta {
+  margin: 0.4rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--card-muted);
+}
+
+.foil-card__dot {
+  margin: 0 0.35rem;
+  opacity: 0.55;
+}
+
+.foil-card__footer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: end;
+  padding-top: 0.15rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.foil-card__endpoint {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.foil-card__code-block {
+  text-align: right;
+  min-width: 0;
+}
+
+.foil-card__code {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.foil-card__holder {
+  margin: 0.2rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--card-muted);
+  white-space: nowrap;
+}
+
+.foil-card__status {
+  margin: 0.15rem 0 0;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--accent-2);
+}
+
+.gift-card-shell--compact .foil-card__amount {
+  font-size: 1.5rem;
+}
+.gift-card-shell--compact .foil-card__inner {
+  gap: 0.65rem;
+  padding: 0.9rem 1rem;
+}
+
+.foil-card--empty {
+  min-height: 10rem;
+  background: var(--bg-elevated);
+  color: var(--muted);
+  box-shadow: none;
+  border: 1px dashed var(--line-strong);
+}
+.foil-card--empty::after {
+  display: none;
+}
+
+.foil-card--drained {
+  filter: grayscale(0.35) brightness(0.92);
+}
+
+.foil-card--drain {
+  animation: card-pulse 0.9s var(--ease) both;
+}
+
+@keyframes card-pulse {
+  0% {
+    filter: brightness(1);
+  }
+  45% {
+    filter: brightness(1.12);
+  }
+  100% {
+    filter: brightness(0.96);
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .foil-card::before {
-    animation: none;
-  }
+.inline-tabular {
+  font-variant-numeric: tabular-nums;
 }
 
 .event-rail {
   scrollbar-width: thin;
-  scrollbar-color: var(--line) transparent;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+/* Theme-safe JSON / code panels (never use bg-ink — ink flips in dark mode) */
+.code-panel {
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: #1c1c1e;
+  color: rgba(235, 235, 245, 0.92);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 1rem;
+}
+[data-theme="light"] .code-panel {
+  background: #2c2c2e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .foil-card--drain {
+    animation: none;
+  }
+  body {
+    transition: none;
+  }
+  .btn-primary:active:not(:disabled),
+  .btn-ghost:active {
+    transform: none;
+  }
 }
