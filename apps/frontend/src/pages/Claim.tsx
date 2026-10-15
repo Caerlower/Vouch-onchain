@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  api,
-  DEMO_AGENT_B,
-  type GiftCard,
-} from "../lib/api";
+import { api, DEMO_AGENT_B_FALLBACK, type GiftCard } from "../lib/api";
 import GiftCardVisual from "../components/GiftCardVisual";
 
 export default function Claim() {
@@ -13,6 +9,16 @@ export default function Claim() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [claimed, setClaimed] = useState(false);
+  const [agentB, setAgentB] = useState(DEMO_AGENT_B_FALLBACK);
+
+  useEffect(() => {
+    api
+      .demoAgents()
+      .then((a) => {
+        if (a.b) setAgentB(a.b);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!code) return;
@@ -28,7 +34,7 @@ export default function Claim() {
     setBusy(true);
     setError("");
     try {
-      const d = await api.claimGiftCard(code, DEMO_AGENT_B);
+      const d = await api.claimGiftCard(code, agentB);
       setCard(d.card);
       setClaimed(true);
     } catch (err) {
@@ -39,35 +45,31 @@ export default function Claim() {
   }
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-center px-5 pb-20 pt-10 md:px-8">
-      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-teal-deep">
-        Claim
-      </p>
-      <h1 className="mt-2 text-center font-display text-3xl font-bold tracking-tight">
-        Your endpoint gift card
+    <div className="mx-auto flex max-w-md flex-col items-center px-5 pb-20 pt-12">
+      <p className="text-[13px] font-medium text-accent">Gift card</p>
+      <h1 className="mt-2 text-center font-display text-[28px] font-semibold tracking-tight">
+        Claim your referral
       </h1>
+      <p className="mt-2 max-w-xs text-center text-[15px] text-ink-2">
+        Accept this card, then redeem it when you pay the API.
+      </p>
       <div className="mt-8 w-full">
         <GiftCardVisual card={card} highlight />
       </div>
-      {error && (
-        <p className="mt-4 text-sm text-coral">{error}</p>
-      )}
+      {error && <p className="mt-4 text-[14px] text-danger">{error}</p>}
       {card && card.status === "minted" && !claimed && (
         <button
           type="button"
           disabled={busy}
           onClick={onClaim}
-          className="mt-8 rounded-full bg-ink px-8 py-3 text-sm font-semibold text-lime disabled:opacity-50"
+          className="btn-primary mt-8"
         >
-          Claim as Agent B
+          {busy ? "Claiming…" : "Claim as Agent B"}
         </button>
       )}
       {(claimed || card?.owner) && (
-        <Link
-          to="/demo"
-          className="mt-8 text-sm font-semibold text-teal-deep underline"
-        >
-          Open live demo to redeem →
+        <Link to="/demo" className="mt-8 text-[15px] font-medium text-accent">
+          Continue in demo →
         </Link>
       )}
     </div>
