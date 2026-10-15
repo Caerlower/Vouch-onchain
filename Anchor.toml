@@ -1,0 +1,20 @@
+[toolchain]
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+gift_card_vault = "8NbhcpsM2VojigW8GRy1ZcY3XhKEpdV9Rte24PmWHbFT"
+
+[programs.devnet]
+gift_card_vault = "8NbhcpsM2VojigW8GRy1ZcY3XhKEpdV9Rte24PmWHbFT"
+
+[provider]
+cluster = "devnet"
+wallet = "apps/backend/.data/operator-keypair.json"
+
+[scripts]
+test = "cargo test -p gift-card-vault"
+
+[hooks]
