@@ -5,8 +5,8 @@ Use this when showing Vouch on MagicBlock.
 ## Setup (once)
 
 ```bash
-cd vouch-magicblock
-npm install
+cd ~/vouch-magicblock
+npm run install:all
 cp apps/backend/.env.example apps/backend/.env
 cp apps/seller/.env.example apps/seller/.env
 cp apps/frontend/.env.example apps/frontend/.env
