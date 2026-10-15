@@ -2,64 +2,65 @@ import { Link } from "react-router-dom";
 
 const STEPS = [
   {
-    n: "01",
-    title: "Register an x402 endpoint",
-    body: "Vouch probes the live 402, locks payTo + price, and opens a gift-card pool for that seller.",
+    n: "1",
+    title: "Register and fund",
+    body: "Add your x402 endpoint and deposit USDC into a gift-card pool. That pool sponsors referrals without discounting your API.",
   },
   {
-    n: "02",
-    title: "Fund the gift-card pool",
-    body: "Seller prepay USDC into the pool. This is the vault that pays rebates and issuer commissions.",
+    n: "2",
+    title: "A referrer pays once",
+    body: "Agent A settles at full list price through Vouch. That payment unlocks the ability to mint a gift card from your pool.",
   },
   {
-    n: "03",
-    title: "Agent A pays, then mints a card",
-    body: "After a successful settle, Agent A mints an endpoint-bound gift card — a tangible rebate voucher with a share code.",
+    n: "3",
+    title: "They share the card",
+    body: "The card is bound to your endpoint. Sharing the code is the referral — only the claimed agent can redeem it.",
   },
   {
-    n: "04",
-    title: "Agent B claims & pays with the card",
-    body: "B claims the card, hits the same endpoint through Vouch with ?gift=CODE, and pays full list price.",
+    n: "4",
+    title: "The referred agent pays",
+    body: "Agent B pays full list with the gift attached. You still receive the full price; the card balance comes from the pool.",
   },
   {
-    n: "05",
-    title: "MagicBlock private remit",
-    body: "Vouch remits rebate → B and commission → A from the pool as a private split through MagicBlock PER. The live rail shows every hop.",
+    n: "5",
+    title: "Private remit",
+    body: "MagicBlock sends the rebate to B and the tip to A as a private split. The live rail shows each hop.",
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <div className="mx-auto max-w-3xl px-5 pb-20 pt-8 md:px-8">
-      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-teal-deep">
-        Concept
-      </p>
-      <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:text-5xl">
-        Gift cards, not opaque rebates
+    <div className="mx-auto max-w-2xl px-5 pb-20 pt-10 md:px-8">
+      <p className="text-[13px] font-medium text-accent">Overview</p>
+      <h1 className="mt-2 font-display text-[34px] font-semibold tracking-tight text-ink md:text-[40px]">
+        How Vouch works
       </h1>
-      <p className="mt-4 text-lg text-ink-soft">
-        The Monad build remitted referral discounts from escrow — powerful, but hard to
-        demo. Here the same value is a gift card agents can mint, claim, and drain on a
-        specific x402 endpoint while the live rail narrates every step.
+      <p className="mt-3 text-[17px] leading-relaxed text-ink-2">
+        Referral stays the core idea. Gift cards make sponsorship visible — and
+        remits stay private on MagicBlock.
       </p>
 
-      <ol className="mt-12 space-y-8">
+      <ol className="mt-12 space-y-0">
         {STEPS.map((s) => (
-          <li key={s.n} className="grid gap-2 border-t border-line pt-6 sm:grid-cols-[4rem_1fr]">
-            <span className="font-mono text-sm text-teal">{s.n}</span>
+          <li
+            key={s.n}
+            className="grid gap-2 border-t border-line py-6 sm:grid-cols-[2rem_1fr]"
+          >
+            <span className="text-[15px] font-semibold text-accent">{s.n}</span>
             <div>
-              <h2 className="font-display text-xl font-bold">{s.title}</h2>
-              <p className="mt-1 text-ink-soft">{s.body}</p>
+              <h2 className="font-display text-[17px] font-semibold tracking-tight">
+                {s.title}
+              </h2>
+              <p className="mt-1.5 text-[15px] leading-relaxed text-ink-2">
+                {s.body}
+              </p>
             </div>
           </li>
         ))}
       </ol>
 
-      <Link
-        to="/demo"
-        className="mt-12 inline-flex rounded-full bg-ink px-6 py-3 text-sm font-semibold text-lime"
-      >
-        See it in the live demo
+      <Link to="/demo" className="btn-primary mt-10 inline-flex">
+        Try the demo
       </Link>
     </div>
   );

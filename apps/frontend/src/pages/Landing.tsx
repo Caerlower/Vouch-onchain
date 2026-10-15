@@ -20,87 +20,64 @@ const SAMPLE: GiftCard = {
 
 export default function Landing() {
   return (
-    <div className="mx-auto max-w-6xl px-5 pb-20 pt-6 md:px-8 md:pt-10">
-      <section className="grid items-center gap-12 md:grid-cols-[1.05fr_0.95fr] md:gap-16">
+    <div className="mx-auto max-w-6xl px-5 pb-24 pt-8 md:px-8 md:pt-12">
+      <section className="grid min-h-[min(70dvh,620px)] items-center gap-10 md:grid-cols-2 md:gap-8">
         <div>
-          <motion.p
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="font-mono text-[11px] uppercase tracking-[0.22em] text-teal-deep"
-          >
-            Solana · x402 · MagicBlock PER
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="mt-4 font-display text-5xl font-bold leading-[0.95] tracking-tight text-ink md:text-7xl"
-          >
+          <h1 className="font-display text-[clamp(3.25rem,9vw,5.5rem)] font-semibold leading-[0.95] tracking-[-0.04em] text-ink">
             Vouch
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12 }}
-            className="mt-5 max-w-md text-lg leading-snug text-ink-soft md:text-xl"
-          >
-            Gift cards for agent x402 endpoints. Agents spend prepaid rebate
-            balance on a bound API — remits settle privately through MagicBlock.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mt-8 flex flex-wrap items-center gap-3"
-          >
-            <Link
-              to="/demo"
-              className="rounded-full bg-ink px-6 py-3 text-sm font-semibold text-lime transition hover:bg-teal-deep hover:text-surface"
-            >
-              Run live demo
+          </h1>
+          <p className="mt-3 text-[15px] font-medium text-accent">
+            Built for Solana x402 · Settled on MagicBlock
+          </p>
+          <p className="mt-5 max-w-[26rem] text-[17px] leading-relaxed text-ink-2">
+            Turn agent referrals into gift cards. Sellers fund a pool. Referrers
+            share a card. Referred agents redeem — privately, at full list price.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link to="/demo" className="btn-primary">
+              Try the demo
             </Link>
-            <Link
-              to="/how"
-              className="rounded-full border border-line bg-surface/70 px-6 py-3 text-sm font-semibold text-ink transition hover:border-ink"
-            >
-              How gift cards work
+            <Link to="/how" className="btn-ghost">
+              How it works
             </Link>
-          </motion.div>
+          </div>
         </div>
 
         <motion.div
-          initial={{ opacity: 0, rotate: -4, y: 24 }}
-          animate={{ opacity: 1, rotate: 0, y: 0 }}
-          transition={{ type: "spring", stiffness: 120, damping: 16, delay: 0.15 }}
-          className="flex justify-center md:justify-end"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 260, damping: 28 }}
+          className="flex justify-center lg:justify-end"
         >
-          <div className="w-full max-w-md rotate-2">
-            <GiftCardVisual card={SAMPLE} highlight label="Sample · endpoint-bound" />
-            <p className="mt-4 text-center font-mono text-[11px] text-muted">
-              Same economics as a referral rebate — presented as something you can hold.
+          <div className="w-full max-w-[22rem]">
+            <GiftCardVisual card={SAMPLE} highlight label="Referral gift card" />
+            <p className="mt-4 text-center text-[13px] text-muted">
+              Fund · Share · Redeem
             </p>
           </div>
         </motion.div>
       </section>
 
-      <section className="mt-24 grid gap-8 border-t border-line pt-14 md:grid-cols-3">
+      <section className="mt-20 grid gap-x-10 gap-y-10 border-t border-line pt-12 md:grid-cols-3">
         {[
           {
-            t: "Bound to an endpoint",
-            d: "Each card is locked to one x402 resource URL. Agents can’t spend it elsewhere.",
+            t: "Sellers fund growth",
+            d: "Prepaid USDC covers rebates and tips. Your list price never changes.",
           },
           {
-            t: "Full list to the seller",
-            d: "Buyer still pays full price. Gift-card value remits from the seller’s prepaid pool.",
+            t: "Agents pass cards",
+            d: "After one payment, a referrer mints an endpoint-bound gift and shares it.",
           },
           {
-            t: "Private MagicBlock split",
-            d: "Rebate → buyer, commission → issuer — via MagicBlock private ephemeral rollups.",
+            t: "Settles in private",
+            d: "On redeem, MagicBlock splits rebate and tip away from the public ledger.",
           },
         ].map((item) => (
           <div key={item.t}>
-            <h2 className="font-display text-xl font-bold tracking-tight">{item.t}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-ink-soft">{item.d}</p>
+            <h2 className="font-display text-[17px] font-semibold tracking-tight text-ink">
+              {item.t}
+            </h2>
+            <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{item.d}</p>
           </div>
         ))}
       </section>
