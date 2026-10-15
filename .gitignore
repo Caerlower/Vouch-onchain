@@ -1,12 +1,41 @@
+# Dependencies
 node_modules/
+
+# Build outputs
 dist/
 build/
+apps/frontend/dist/
+**/.vite/
+
+# Env & secrets
 .env
 .env.local
+.env.*.local
+apps/backend/.data/
+
+# Logs & OS
 *.log
 .DS_Store
-apps/frontend/dist/
+Thumbs.db
+
+# Solana / Anchor
 .anchor/
 target/
 test-ledger/
-**/.vite/
+.crates/
+.cargo-home/
+*-keypair.json
+!apps/backend/idl/**
+
+# Editors / tooling
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# Coverage / caches
+coverage/
+.nyc_output/
+*.tsbuildinfo
+.turbo/
