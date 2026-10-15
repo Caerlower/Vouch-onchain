@@ -1,7 +1,7 @@
 /**
  * Native Solana x402 seller — unlocks product after settle.
  * Works with real @x402/svm when a facilitator is available,
- * and always supports DEMO_MODE for local gift-card walkthroughs.
+ * and supports DEMO_MODE for local development without a facilitator.
  */
 import express from "express";
 import cors from "cors";
@@ -42,7 +42,7 @@ export function productPayload(extra: Record<string, unknown> = {}) {
   };
 }
 
-/** Minimal Solana-shaped PAYMENT-REQUIRED for demo probes / local walkthrough. */
+/** Minimal Solana-shaped PAYMENT-REQUIRED for local probes when DEMO_MODE=true. */
 function demoPaymentRequiredHeader(): string {
   const amount = Math.round(
     (Number(process.env.BASE_PRICE_USDC) || 0.05) * 1_000_000,
@@ -159,7 +159,7 @@ app.get(RESOURCE_PATH, (req, res) => {
       productPayload({
         surface: "demo-x402",
         payer,
-        note: "Unlocked via demo payment header (local walkthrough).",
+        note: "Unlocked via demo payment header (DEMO_MODE).",
       }),
     );
   }

@@ -25,13 +25,12 @@ Status of what works on **Solana Devnet** today, what is simulated, and known ga
 | Remittance / vault asset | Custom Devnet mint (`MAGICBLOCK_REMIT_MINT`), not Circle USDC |
 | Claim / redeem signatures | Operator-mediated (agents don’t sign; operator is authority) |
 
-## Why Rust is here now
+## On-chain vault
 
-The vault was deferred while the MagicBlock + x402 UX was proven with memo
-attestations. It is now implemented and deployed so seller pool balances and
-card PDAs have **real on-chain custody**.
+Seller pool balances and gift-card PDAs are custodied by the Anchor
+`gift_card_vault` program on Devnet (see `programs/gift-card-vault/`).
 
-## Security notes (demo scope)
+## Security notes (Devnet scope)
 
 - Operator secret lives in `apps/backend/.data/` (gitignored) — treat as hot key.
 - `DEMO_MODE=true` must stay **off** for any public deployment accepting real payments.

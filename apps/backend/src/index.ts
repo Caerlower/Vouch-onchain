@@ -762,7 +762,7 @@ async function finishSettlement(args: {
 app.get("/resource", handleResource);
 app.get("/r/:sellerId/resource", handleResource);
 
-// Demo pay endpoint — signs a fake payment for walkthroughs without a wallet
+// Local settle helper when DEMO_MODE=true (no wallet / facilitator required)
 app.post("/demo/pay", async (req, res) => {
   if (!DEMO_MODE) return res.status(403).json({ error: "demo_disabled" });
   try {

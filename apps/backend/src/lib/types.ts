@@ -35,7 +35,7 @@ export type GiftCardStatus =
 
 /**
  * Endpoint-bound prepaid balance agents can redeem against a specific x402 URL.
- * Same economics as the Monad rebate — packaged as a tangible gift card.
+ * Seller-sponsored rebate packaged as an endpoint-bound gift card.
  */
 export interface GiftCard {
   id: string;

@@ -7,7 +7,7 @@
 
 **Seller-sponsored referral gift cards for Solana [x402](https://x402.org) agents, with private rebate/tip settlement via [MagicBlock](https://www.magicblock.xyz) Private Ephemeral Rollups.**
 
-Standalone monorepo (not part of the Monad Vouch build). Same attribution idea — reframed so demos are visual, interactive, and land **real Devnet signatures**.
+Monorepo with a React demo UI, Express x402 proxy, Anchor gift-card vault, and live Devnet settlement.
 
 ---
 
@@ -23,7 +23,6 @@ Standalone monorepo (not part of the Monad Vouch build). Same attribution idea �
 - [On-chain status (Devnet)](#on-chain-status-devnet)
 - [Gift-card vault (Rust)](#gift-card-vault-rust)
 - [API](#api)
-- [Demo script](#demo-script)
 - [Development](#development)
 - [License](#license)
 
@@ -32,20 +31,20 @@ Standalone monorepo (not part of the Monad Vouch build). Same attribution idea �
 ## Problem
 
 Native x402 lets agents pay APIs at full list price. Growth still needs
-**agentic referral** — and sellers need a way to *sponsor* that loop without
+**agentic referral** — and sellers need a way to sponsor that loop without
 discounting their API.
 
 ## Solution
 
 | Piece | Role |
 |-------|------|
-| **Gift card** | Endpoint-bound, seller-funded sponsorship visible as a card |
+| **Gift card** | Endpoint-bound, seller-funded sponsorship |
 | **Referrer (A)** | Pays once → mints card from the pool → shares it |
 | **Referred (B)** | Claims → redeems while paying full list |
-| **MagicBlock** | Private remit: rebate → B, tip → A (observers don’t see the split) |
-| **Live rail** | SSE stream of every hop (settle, mint, remit) |
+| **MagicBlock** | Private remit: rebate → B, tip → A |
+| **Live rail** | SSE stream of settle, mint, and remit events |
 
-Seller still receives **full list price**. Card value comes from the prepaid pool.
+Seller receives **full list price**. Card value comes from the prepaid pool.
 
 ---
 
@@ -65,8 +64,6 @@ Agent B pays full list via Vouch (?gift=CODE)
         └─► MagicBlock private remit: rebate→B + tip→A
 ```
 
-Narrated walkthrough: [`docs/DEMO.md`](./docs/DEMO.md)
-
 ---
 
 ## Repository layout
@@ -74,18 +71,18 @@ Narrated walkthrough: [`docs/DEMO.md`](./docs/DEMO.md)
 ```text
 vouch-magicblock/
 ├── apps/
-│   ├── frontend/          # React 19 · Vite · demo + live SSE rail (:5174)
-│   ├── backend/           # Express · x402 proxy · gift cards · MagicBlock (:4100)
-│   └── seller/            # Demo Solana x402 resource (:4101)
+│   ├── frontend/          # React 19 · Vite · UI + SSE rail (:5174)
+│   ├── backend/           # Express · x402 proxy · vault client · MagicBlock (:4100)
+│   └── seller/            # Sample Solana x402 resource (:4101)
 ├── programs/
-│   └── gift-card-vault/   # Anchor/Rust vault (deployed on Devnet)
-├── Anchor.toml            # Anchor workspace
+│   └── gift-card-vault/   # Anchor/Rust vault (Devnet)
+├── Anchor.toml
 ├── docs/
-│   ├── ARCHITECTURE.md    # System design, trust model, data flow
-│   ├── AUDIT.md           # Honest Devnet capability matrix
-│   └── DEMO.md            # 60–90s demo script
+│   ├── ARCHITECTURE.md
+│   ├── AUDIT.md
+│   └── SECURITY.md
 ├── LICENSE
-├── package.json           # Workspace scripts
+├── package.json
 └── README.md
 ```
 
@@ -96,7 +93,8 @@ vouch-magicblock/
 **Requirements:** Node.js ≥ 20, npm, Devnet SOL for the operator (auto-created keypair).
 
 ```bash
-git clone <repo-url> && cd vouch-magicblock
+git clone https://github.com/Caerlower/Vouch-onchain.git
+cd Vouch-onchain
 npm run install:all
 
 cp apps/backend/.env.example  apps/backend/.env
@@ -120,7 +118,7 @@ If the UI badge says **Solana · needs SOL**, fund the operator from
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `DEMO_MODE` | `true` | Synthetic x402 payment headers for walkthroughs |
+| `DEMO_MODE` | `true` | Synthetic x402 payment headers for local development |
 | `SOLANA_ONCHAIN` | `true` | Post Devnet memo txs for fund / settle / mint |
 | `MAGICBLOCK_ENABLED` | `true` | Live private PER remits (build → sign → send) |
 | `MAGICBLOCK_REMIT_MINT` | (see `.env`) | Devnet mint for vault custody + private remits |
@@ -129,13 +127,11 @@ If the UI badge says **Solana · needs SOL**, fund the operator from
 | `SOLANA_CLUSTER` | `devnet` | Cluster for Explorer links + RPC |
 | `VOUCH_OPERATOR_SECRET` | unset | Optional; else keypair under `apps/backend/.data/` |
 
-See `apps/*/.env.example` for the full set.
+See `apps/*/.env.example` for the full set. Keep `DEMO_MODE=false` on any shared host — see [`docs/SECURITY.md`](./docs/SECURITY.md).
 
 ---
 
 ## Architecture
-
-High-level diagram, trust model, and MagicBlock remit path:
 
 **→ [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)**
 
@@ -158,9 +154,9 @@ Frontend (:5174)  ←SSE/REST→  Backend (:4100)  ←402→  Seller (:4101)
 | Gift-card vault (Anchor / Rust) | **Live** — `8NbhcpsM2VojigW8GRy1ZcY3XhKEpdV9Rte24PmWHbFT` |
 | MagicBlock private rebate + tip | **Live** (`magicblock-private`) |
 | SSE activity + Explorer links | **Live** |
-| Facilitator USDC x402 settle | **Demo mode** (`DEMO_MODE=true`) |
+| Facilitator USDC x402 settle | Local `DEMO_MODE` (set `false` for live facilitator) |
 
-Full matrix and gaps: **[`docs/AUDIT.md`](./docs/AUDIT.md)**
+Capability matrix: [`docs/AUDIT.md`](./docs/AUDIT.md)
 
 ---
 
@@ -184,22 +180,16 @@ npm run deploy:program   # Devnet; uses operator keypair
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `GET` | `/health` | Cluster, vault, MagicBlock, operator, demo agents |
-| `GET` | `/events` | SSE live rail |
-| `GET` | `/demo/agents` | Real Devnet pubkeys for Agents A / B |
+| `GET` | `/health` | Cluster, vault, MagicBlock, operator status |
+| `GET` | `/events` | SSE event stream |
+| `GET` | `/demo/agents` | Devnet pubkeys for Agents A / B |
 | `POST` | `/sellers/probe` | Discover payTo + price from a live 402 |
 | `POST` | `/sellers` | Register endpoint + seed pool (on-chain vault) |
 | `POST` | `/pool/:id/fund` | Top up pool (vault `fund` + memo) |
 | `POST` | `/gift-cards/mint` | Referrer mints card (vault `mint_card`) |
 | `POST` | `/gift-cards/claim` | Referred agent claims (vault `claim_card`) |
 | `GET` | `/r/:sellerId/resource` | x402 proxy (redeem with `?gift=`) |
-| `POST` | `/demo/pay` | Demo settle walkthrough |
-
----
-
-## Demo script
-
-See **[`docs/DEMO.md`](./docs/DEMO.md)** for a 60–90 second narration.
+| `POST` | `/demo/pay` | Local settle helper when `DEMO_MODE=true` |
 
 ---
 
@@ -216,7 +206,7 @@ Rust / Anchor 1.x · `@solana/web3.js` · MagicBlock Private Payments API
 
 **Conventions:**
 
-- Secrets and keypairs: never commit `.env` or `apps/backend/.data/`
+- Never commit `.env` or `apps/backend/.data/`
 - Prefer Explorer links in the UI over opaque IDs
 - Keep MagicBlock remits `visibility: private`
 

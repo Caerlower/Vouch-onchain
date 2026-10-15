@@ -1,8 +1,8 @@
 # Security notes
 
-This repo is a **Devnet demo**. Defaults are intentionally loose for local
-walkthroughs. Do **not** expose the backend to the public internet with
-`DEMO_MODE=true` and a funded operator.
+This project targets **Solana Devnet**. Defaults favor local development.
+Do **not** expose the backend to the public internet with `DEMO_MODE=true`
+and a funded operator.
 
 ## What is safe to publish
 
@@ -13,10 +13,10 @@ walkthroughs. Do **not** expose the backend to the public internet with
 ## What must never be committed
 
 - `apps/backend/.env` / any `.env`  
-- `apps/backend/.data/` (operator + demo agent keypairs)  
+- `apps/backend/.data/` (operator + agent keypairs)  
 - `target/deploy/*-keypair.json`  
 
-## Demo risks (by design today)
+## Known risks with default config
 
 | Risk | Mitigation for any shared deploy |
 |------|----------------------------------|
@@ -27,6 +27,6 @@ walkthroughs. Do **not** expose the backend to the public internet with
 
 ## Vault program
 
-- Operator is the vault `operator` and (in the demo) also `owner`.  
-- Redeem is operator-mediated — suitable for custodial demo agents only.  
+- Operator is the vault `operator` and (in this setup) also `owner`.  
+- Redeem is operator-mediated — suitable for custodial agents only.  
 - Rotate upgrade authority before mainnet.
